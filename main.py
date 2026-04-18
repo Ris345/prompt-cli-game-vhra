@@ -5,26 +5,41 @@ from typing import Optional
 
 import typer
 
+_EPILOG = """
+Scenarios: product-manager · software-engineer · data-analyst · technical-writer · marketer · recruiter
+
+Session IDs are shown at the start of each game and in `vhra --stats`.
+Use the first 8 characters or the full UUID with --replay.
+
+Requires: ANTHROPIC_API_KEY env var (get one at https://console.anthropic.com)
+"""
+
 app = typer.Typer(
     name="vhra",
     help="vhra — the prompt training engine",
     add_completion=False,
     no_args_is_help=False,
+    epilog=_EPILOG,
 )
 
 
-@app.command()
+@app.command(epilog=_EPILOG)
 def main(
     replay: Optional[str] = typer.Option(
         None, "--replay", "-r", metavar="SESSION_ID",
-        help="Replay a saved session turn-by-turn.",
+        help="Replay a saved session turn-by-turn (8-char prefix or full UUID).",
     ),
     stats: bool = typer.Option(
         False, "--stats", "-s",
         help="Show prompt score history across all sessions.",
     ),
 ) -> None:
-    """vhra — train your prompting skills through real-world scenario practice."""
+    """Train your prompting skills through real-world scenario practice.
+
+    Run without arguments to start a new game. Pick a scenario, then type
+    prompts to practice — each one is silently scored on specificity, context,
+    constraints, and output format.
+    """
     if not os.environ.get("ANTHROPIC_API_KEY"):
         typer.echo(
             "\nError: ANTHROPIC_API_KEY is not set.\n\n"

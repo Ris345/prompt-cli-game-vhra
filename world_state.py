@@ -91,12 +91,13 @@ def save_session(world_state: WorldState) -> None:
 
 
 def load_session(session_id: str) -> Optional[WorldState]:
-    path = _db_path(session_id)
-    if not path.exists():
+    SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
+    matches = list(SESSIONS_DIR.glob(f"{session_id}*.json"))
+    if not matches:
         return None
+    path = matches[0]
     db = TinyDB(path)
-    S = Query()
-    results = db.search(S.session_id == session_id)
+    results = db.all()
     if results:
         return WorldState.from_dict(results[0])
     return None

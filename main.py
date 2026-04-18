@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from typing import Optional
 
 import typer
@@ -24,6 +25,16 @@ def main(
     ),
 ) -> None:
     """vhra — train your prompting skills through real-world scenario practice."""
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        typer.echo(
+            "\nError: ANTHROPIC_API_KEY is not set.\n\n"
+            "  1. Get a key at https://console.anthropic.com\n"
+            "  2. Run: export ANTHROPIC_API_KEY=\"sk-ant-...\"\n"
+            "  3. Then run: vhra\n",
+            err=True,
+        )
+        raise typer.Exit(code=1)
+
     from .renderer import console, render_splash
 
     render_splash()

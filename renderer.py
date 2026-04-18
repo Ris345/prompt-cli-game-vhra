@@ -42,12 +42,16 @@ def render_splash() -> None:
 # Scene
 # ---------------------------------------------------------------------------
 
-def render_scene(world_state: WorldState, response: ScenarioResponse | None = None) -> None:
+def render_scene(world_state: WorldState, response: ScenarioResponse | None = None, opener: str = "") -> None:
     turn_num = world_state.scene_number + 1
 
     if response is None:
-        # Opening panel — no response yet
-        body = f"[{_T['dim']}]scenario: [cyan]{world_state.scenario}[/cyan]\n\nType your first prompt below. The more specific and context-rich it is, the better Claude responds.[/{_T['dim']}]"
+        situation = f"\n[white]{opener}[/white]\n" if opener else ""
+        body = (
+            f"[{_T['dim']}]scenario: [cyan]{world_state.scenario}[/cyan][/{_T['dim']}]"
+            f"{situation}\n"
+            f"[{_T['dim']}]The more specific and context-rich your prompt, the better Claude responds.[/{_T['dim']}]"
+        )
         console.print(
             Panel(
                 body,

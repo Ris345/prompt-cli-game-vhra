@@ -4,6 +4,9 @@ import random
 import readline  # noqa: F401 — activates arrow-key editing and history for input()
 from concurrent.futures import ThreadPoolExecutor
 
+import anthropic
+import typer
+
 from rich.prompt import Prompt
 
 from .claude_client import generate_response, score_prompt
@@ -28,6 +31,15 @@ SCENARIO_HINTS = {
     "recruiter":         "job descriptions, interview questions, candidate evals",
 }
 
+SCENARIO_OPENERS = {
+    "product-manager":   "You're a PM at a B2B SaaS company. Your next feature is on the roadmap but poorly defined. Ask Claude to help you shape it — a PRD, user stories, a prioritisation framework, anything you need.",
+    "software-engineer": "You're an engineer mid-sprint with a gnarly problem. Ask Claude to review code, help debug an issue, or think through an architecture decision.",
+    "data-analyst":      "You're a data analyst who needs answers from a messy dataset. Ask Claude to help you write a query, interpret results, or structure a report.",
+    "technical-writer":  "You're a technical writer on deadline. Ask Claude to draft or improve docs — an API guide, a how-to, a changelog, whatever's on your plate.",
+    "marketer":          "You're a marketer launching a campaign. Ask Claude for ad copy, an email sequence, a campaign brief, or positioning advice.",
+    "recruiter":         "You're a recruiter filling a role. Ask Claude to write a job description, draft interview questions, or help evaluate a candidate.",
+}
+
 
 def pick_scenario() -> str:
     console.print("[dim]scenarios:[/dim]")
@@ -49,7 +61,8 @@ def pick_scenario() -> str:
 
 
 def run_game_loop(world_state: WorldState) -> None:
-    render_scene(world_state, response=None)
+    opener = SCENARIO_OPENERS.get(world_state.scenario, "")
+    render_scene(world_state, response=None, opener=opener)
 
     while True:
         console.print()
@@ -63,12 +76,12 @@ def run_game_loop(world_state: WorldState) -> None:
         stripped = user_input.strip()
         if not stripped:
             continue
-        readline.add_history(stripped)
         if stripped.lower() in {"quit", "exit", "q", ":q"}:
             console.print(f"[dim]session {world_state.session_id[:8]} saved.[/dim]")
             save_session(world_state)
             break
 
+        readline.add_history(stripped)
         with console.status("[dim]...[/dim]", spinner="dots"):
             try:
                 with ThreadPoolExecutor(max_workers=2) as executor:
@@ -76,6 +89,11 @@ def run_game_loop(world_state: WorldState) -> None:
                     response_fut = executor.submit(generate_response, stripped, world_state)
                     score = score_fut.result()
                     response = response_fut.result()
+            except anthropic.AuthenticationError:
+                console.print(
+                    "[red]Invalid API key.[/red] Check your ANTHROPIC_API_KEY and try again."
+                )
+                raise typer.Exit(code=1)
             except Exception as exc:
                 console.print(f"[red]API error:[/red] {exc}")
                 continue

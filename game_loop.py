@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import random
+import readline  # noqa: F401 — activates arrow-key editing and history for input()
+from concurrent.futures import ThreadPoolExecutor
 
 from rich.prompt import Prompt
 
@@ -61,6 +63,7 @@ def run_game_loop(world_state: WorldState) -> None:
         stripped = user_input.strip()
         if not stripped:
             continue
+        readline.add_history(stripped)
         if stripped.lower() in {"quit", "exit", "q", ":q"}:
             console.print(f"[dim]session {world_state.session_id[:8]} saved.[/dim]")
             save_session(world_state)
@@ -68,8 +71,11 @@ def run_game_loop(world_state: WorldState) -> None:
 
         with console.status("[dim]...[/dim]", spinner="dots"):
             try:
-                score = score_prompt(stripped, world_state.history)
-                response = generate_response(stripped, world_state, score)
+                with ThreadPoolExecutor(max_workers=2) as executor:
+                    score_fut = executor.submit(score_prompt, stripped, world_state.history)
+                    response_fut = executor.submit(generate_response, stripped, world_state)
+                    score = score_fut.result()
+                    response = response_fut.result()
             except Exception as exc:
                 console.print(f"[red]API error:[/red] {exc}")
                 continue

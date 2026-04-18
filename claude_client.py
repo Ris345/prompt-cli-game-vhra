@@ -10,12 +10,20 @@ from .world_state import PromptScore, ScenarioResponse, WorldState
 
 _client = anthropic.Anthropic()
 _PROMPTS = Path(__file__).parent / "prompts"
-_SCORE_MODEL = "claude-sonnet-4-5"
-_SIM_MODEL = "claude-sonnet-4-5"
+_SCORE_MODEL = "claude-sonnet-4-6"
+_SIM_MODEL = "claude-sonnet-4-6"
+
+_prompt_cache: dict[str, str] = {}
 
 
 def _load(name: str) -> str:
-    return (_PROMPTS / name).read_text(encoding="utf-8")
+    if name not in _prompt_cache:
+        _prompt_cache[name] = (_PROMPTS / name).read_text(encoding="utf-8")
+    return _prompt_cache[name]
+
+
+def _cached_system(name: str) -> list[dict]:
+    return [{"type": "text", "text": _load(name), "cache_control": {"type": "ephemeral"}}]
 
 
 def _parse_json(text: str) -> dict:
@@ -53,7 +61,7 @@ def score_prompt(user_prompt: str, history: list[dict]) -> PromptScore:
     response = _client.messages.create(
         model=_SCORE_MODEL,
         max_tokens=512,
-        system=_load("score.txt"),
+        system=_cached_system("score.txt"),
         messages=[
             {
                 "role": "user",
@@ -73,7 +81,7 @@ def score_prompt(user_prompt: str, history: list[dict]) -> PromptScore:
 
 
 def generate_response(
-    user_prompt: str, world_state: WorldState, score: PromptScore
+    user_prompt: str, world_state: WorldState
 ) -> ScenarioResponse:
     """Call 2: simulate how Claude would respond to this prompt in the given scenario."""
     tagged_prompt = (
@@ -88,7 +96,7 @@ def generate_response(
     response = _client.messages.create(
         model=_SIM_MODEL,
         max_tokens=1200,
-        system=_load("story.txt"),
+        system=_cached_system("story.txt"),
         messages=messages,
     )
     data = _parse_json(response.content[0].text)

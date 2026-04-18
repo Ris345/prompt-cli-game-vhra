@@ -131,18 +131,21 @@ def main(
     from .game_loop import pick_scenario, run_game_loop
     from .world_state import WorldState
 
-    scenario = pick_scenario()
-    world_state = WorldState(scenario=scenario)
+    while True:
+        scenario = pick_scenario()
+        world_state = WorldState(scenario=scenario)
 
-    console.print(
-        f"\n[dim]session id:[/dim] [dim white]{world_state.session_id}[/dim white]"
-    )
-    console.print(
-        "[dim]type your prompts and press Enter each turn. "
-        "[cyan]quit[/cyan] or [cyan]Ctrl-C[/cyan] to exit.[/dim]\n"
-    )
+        console.print(
+            f"\n[dim]session id:[/dim] [dim white]{world_state.session_id}[/dim white]"
+        )
+        console.print(
+            "[dim]type your prompts and press Enter each turn. "
+            "[cyan]quit[/cyan] or [cyan]Ctrl-C[/cyan] to exit.[/dim]\n"
+        )
 
-    run_game_loop(world_state)
+        result = run_game_loop(world_state)
+        if result != "clear":
+            break
 
 
 if __name__ == "__main__":

@@ -65,7 +65,7 @@ def pick_scenario() -> str:
         console.print(f"[dim]unknown scenario — try one of: {', '.join(SCENARIOS)}[/dim]")
 
 
-def run_game_loop(world_state: WorldState) -> None:
+def run_game_loop(world_state: WorldState) -> str:
     opener = SCENARIO_OPENERS.get(world_state.scenario, "")
     render_scene(world_state, response=None, opener=opener)
 
@@ -76,7 +76,7 @@ def run_game_loop(world_state: WorldState) -> None:
         except (KeyboardInterrupt, EOFError):
             console.print(f"\n[dim]session {world_state.session_id[:8]} saved.[/dim]")
             save_session(world_state)
-            break
+            return "quit"
 
         stripped = user_input.strip()
         if not stripped:
@@ -84,7 +84,11 @@ def run_game_loop(world_state: WorldState) -> None:
         if stripped.lower() in {"quit", "exit", "q", ":q"}:
             console.print(f"[dim]session {world_state.session_id[:8]} saved.[/dim]")
             save_session(world_state)
-            break
+            return "quit"
+        if stripped.lower() == "clear":
+            save_session(world_state)
+            console.clear()
+            return "clear"
         if stripped.lower() in {"help", "--help", "-h"}:
             from .main import _STATIC_HELP
             console.print(_STATIC_HELP)

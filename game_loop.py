@@ -105,8 +105,22 @@ def run_game_loop(world_state: WorldState) -> str:
         if stripped.lower().startswith("vhra --replay"):
             console.print("[dim]Run [cyan]vhra --replay <id>[/cyan] from your terminal, not inside a session.[/dim]")
             continue
+        if stripped.lower() == "vhra --delete-all" or stripped.lower() == "delete-all":
+            from .world_state import delete_all_sessions
+            n = delete_all_sessions()
+            console.print(f"[dim]deleted {n} session{'s' if n != 1 else ''}.[/dim]")
+            continue
+        if stripped.lower().startswith("vhra --delete ") or stripped.lower().startswith("delete "):
+            parts = stripped.split()
+            sid = parts[-1]
+            from .world_state import delete_session
+            if delete_session(sid):
+                console.print(f"[dim]session [cyan]{sid}[/cyan] deleted.[/dim]")
+            else:
+                console.print(f"[red]session [bold]{sid!r}[/bold] not found.[/red]")
+            continue
         if stripped.lower().startswith("vhra"):
-            console.print("[dim]Commands: [cyan]help[/cyan]  [cyan]clear[/cyan]  [cyan]stats[/cyan]  [cyan]quit[/cyan][/dim]")
+            console.print("[dim]Commands: [cyan]help[/cyan]  [cyan]clear[/cyan]  [cyan]stats[/cyan]  [cyan]quit[/cyan]  [cyan]delete <id>[/cyan]  [cyan]delete-all[/cyan][/dim]")
             continue
 
         readline.add_history(stripped)

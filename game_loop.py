@@ -55,7 +55,7 @@ def pick_scenario() -> str:
             scenario = random.choice(SCENARIOS)
             console.print(f"[dim]randomly selected:[/dim] [cyan]{scenario}[/cyan]")
             return scenario
-        if lower in {"help", "--help", "-h"}:
+        if lower in {"help", "--help", "-h"} or lower.startswith("vhra"):
             from .main import _STATIC_HELP
             console.print(_STATIC_HELP)
             continue
@@ -89,9 +89,24 @@ def run_game_loop(world_state: WorldState) -> str:
             save_session(world_state)
             console.clear()
             return "clear"
-        if stripped.lower() in {"help", "--help", "-h"}:
+        if stripped.lower() in {"help", "--help", "-h"} or stripped.lower().startswith("vhra --help") or stripped.lower().startswith("vhra -h"):
             from .main import _STATIC_HELP
             console.print(_STATIC_HELP)
+            continue
+        if stripped.lower().startswith("vhra --stats") or stripped.lower() == "stats":
+            from .world_state import list_sessions
+            from .renderer import render_stats_table
+            sessions = list_sessions()
+            if not sessions:
+                console.print("[dim]No sessions yet.[/dim]")
+            else:
+                render_stats_table(sessions)
+            continue
+        if stripped.lower().startswith("vhra --replay"):
+            console.print("[dim]Run [cyan]vhra --replay <id>[/cyan] from your terminal, not inside a session.[/dim]")
+            continue
+        if stripped.lower().startswith("vhra"):
+            console.print("[dim]Commands: [cyan]help[/cyan]  [cyan]clear[/cyan]  [cyan]stats[/cyan]  [cyan]quit[/cyan][/dim]")
             continue
 
         readline.add_history(stripped)

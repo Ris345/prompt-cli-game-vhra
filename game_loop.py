@@ -45,19 +45,24 @@ def pick_scenario() -> str:
     console.print("[dim]scenarios:[/dim]")
     for s in SCENARIOS:
         console.print(f"  [cyan]{s}[/cyan]  [dim]{SCENARIO_HINTS[s]}[/dim]")
-    choice = Prompt.ask(
-        "\n[dim white]pick a scenario or press Enter for random[/dim white]",
-        default="",
-    )
-    if not choice.strip():
-        scenario = random.choice(SCENARIOS)
-        console.print(f"[dim]randomly selected:[/dim] [cyan]{scenario}[/cyan]")
-        return scenario
-    lower = choice.strip().lower()
-    for s in SCENARIOS:
-        if s.startswith(lower) or lower in s:
-            return s
-    return lower
+    while True:
+        choice = Prompt.ask(
+            "\n[dim white]pick a scenario or press Enter for random[/dim white]",
+            default="",
+        )
+        lower = choice.strip().lower()
+        if not lower:
+            scenario = random.choice(SCENARIOS)
+            console.print(f"[dim]randomly selected:[/dim] [cyan]{scenario}[/cyan]")
+            return scenario
+        if lower in {"help", "--help", "-h"}:
+            from .main import _STATIC_HELP
+            console.print(_STATIC_HELP)
+            continue
+        for s in SCENARIOS:
+            if s.startswith(lower) or lower in s:
+                return s
+        console.print(f"[dim]unknown scenario — try one of: {', '.join(SCENARIOS)}[/dim]")
 
 
 def run_game_loop(world_state: WorldState) -> None:
@@ -80,6 +85,10 @@ def run_game_loop(world_state: WorldState) -> None:
             console.print(f"[dim]session {world_state.session_id[:8]} saved.[/dim]")
             save_session(world_state)
             break
+        if stripped.lower() in {"help", "--help", "-h"}:
+            from .main import _STATIC_HELP
+            console.print(_STATIC_HELP)
+            continue
 
         readline.add_history(stripped)
         with console.status("[dim]...[/dim]", spinner="dots"):

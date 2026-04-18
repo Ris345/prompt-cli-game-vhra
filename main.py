@@ -82,6 +82,14 @@ def main(
         False, "--stats", "-s",
         help="Show prompt score history across all sessions.",
     ),
+    delete: Optional[str] = typer.Option(
+        None, "--delete", "-d", metavar="SESSION_ID",
+        help="Delete a session by ID (8-char prefix or full UUID).",
+    ),
+    delete_all: bool = typer.Option(
+        False, "--delete-all",
+        help="Delete all saved sessions.",
+    ),
 ) -> None:
     """vhra — the prompt training engine."""
 
@@ -115,6 +123,21 @@ def main(
             console.print("[dim]No sessions found yet. Run [cyan]vhra[/cyan] to start one.[/dim]")
         else:
             render_stats_table(sessions)
+        return
+
+    if delete_all:
+        from .world_state import delete_all_sessions
+        n = delete_all_sessions()
+        console.print(f"[dim]deleted {n} session{'s' if n != 1 else ''}.[/dim]")
+        return
+
+    if delete:
+        from .world_state import delete_session
+        if delete_session(delete):
+            console.print(f"[dim]session [cyan]{delete}[/cyan] deleted.[/dim]")
+        else:
+            console.print(f"[red]session [bold]{delete!r}[/bold] not found.[/red]")
+            raise typer.Exit(code=1)
         return
 
     if replay:

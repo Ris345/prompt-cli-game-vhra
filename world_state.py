@@ -103,6 +103,23 @@ def load_session(session_id: str) -> Optional[WorldState]:
     return None
 
 
+def delete_session(session_id: str) -> bool:
+    SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
+    matches = list(SESSIONS_DIR.glob(f"{session_id}*.json"))
+    if not matches:
+        return False
+    matches[0].unlink()
+    return True
+
+
+def delete_all_sessions() -> int:
+    SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
+    files = list(SESSIONS_DIR.glob("*.json"))
+    for f in files:
+        f.unlink()
+    return len(files)
+
+
 def list_sessions() -> list[WorldState]:
     SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
     sessions: list[WorldState] = []
